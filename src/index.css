@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: #F0E2E5;
+  }
+  body {
+    background-color: #FFF7F8;
+    color: #2B2325;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #F0E2E5;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #EFA3B5;
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(240, 226, 229, 0.8);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid #F0E2E5;
+}
+
+.subtle-blush-gradient {
+  background: linear-gradient(135deg, #FFF9FA 0%, #FFF0F3 50%, #FFF7F8 100%);
+}
+
+.hero-luxury-gradient {
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(252,238,239,0.7) 100%);
+}
+
+.pink-radial-glow {
+  background: radial-gradient(circle at 50% 50%, rgba(239, 163, 181, 0.15) 0%, rgba(255, 247, 248, 0) 70%);
+}
