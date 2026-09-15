@@ -4,12 +4,32 @@
 
 @layer base {
   * {
-    border-color: #F0E2E5;
+    border-color: #F8C9D2;
   }
   body {
-    background-color: #FFF7F8;
-    color: #2B2325;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: #FFF9F6;
+    color: #3B202B;
+    font-family: 'Inter', sans-serif;
+  }
+  h1, h2, h3, h4, .font-heading {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+}
+
+/* Print styles for Print-Ready PDF export */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .page-break {
+    page-break-after: always;
   }
 }
 

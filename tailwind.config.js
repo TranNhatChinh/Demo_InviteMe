@@ -24,12 +24,22 @@ export default {
           error: '#D95D69',
           maybe: '#8E7DBE',
           checkedIn: '#3B82F6',
-        }
+        },
+        // Exact InviteMe Design System Palette
+        rose: '#EFA3B3',       // Primary Rose (brand identity, active states)
+        blush: '#F8C9D2',      // Blush Pink (hover states, soft backgrounds)
+        petal: '#FDECEF',      // Petal (surface/card backgrounds)
+        ivory: '#FFF9F6',      // Ivory (canvas/main background)
+        ink: '#3B202B',        // Ink (primary text)
+        muted: '#8B6A74',      // Muted (secondary text, inactive states)
+        sage: '#B7CBB8',       // Sage - Success/Attending RSVP
+        declined: '#D97986',   // Error/Declined RSVP
+        champagne: '#E8CFA8',  // Champagne - Warning/Unresponded
       },
       fontFamily: {
-        serif: ['"Cormorant Garamond"', '"Playfair Display"', 'Georgia', 'serif'],
-        display: ['"Playfair Display"', '"Cormorant Garamond"', 'Georgia', 'serif'],
-        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
+        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        sans: ['Inter', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         'sm': '8px',
