@@ -8,6 +8,7 @@ import {
   Search, 
   ArrowRight, 
   UserCheck, 
+  UserPlus,
   Utensils, 
   X,
   Crown,
