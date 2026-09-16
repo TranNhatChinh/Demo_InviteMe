@@ -263,7 +263,7 @@ export const GuestListTracker: React.FC<GuestListTrackerProps> = ({
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#F8C9D2] text-[#3B202B] font-medium text-sm shadow-xs hover:bg-[#FDECEF] hover:border-[#EFA3B3] active:scale-[0.98] transition-all duration-200"
           >
             <FileSpreadsheet className="w-4 h-4 text-[#EFA3B3]" />
-            <span>Import from CSV</span>
+            <span>Import Excel / CSV</span>
           </button>
 
           <button
@@ -689,7 +689,7 @@ export const GuestListTracker: React.FC<GuestListTrackerProps> = ({
                 <div className="flex items-center justify-between font-bold text-sm text-[#3B202B]">
                   <span className="flex items-center gap-1.5">
                     <HelpCircle className="w-4 h-4 text-[#E8CFA8]" />
-                    <span>Hướng dẫn định dạng File CSV:</span>
+                    <span>Hướng dẫn cấu trúc các cột trong Excel Sheet:</span>
                   </span>
                   <button
                     type="button"
@@ -697,49 +697,58 @@ export const GuestListTracker: React.FC<GuestListTrackerProps> = ({
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#EFA3B3] text-[#3B202B] font-semibold text-xs hover:bg-[#F8C9D2] transition-colors shadow-xs"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>Tải CSV Mẫu (.csv)</span>
+                    <span>Tải Excel Mẫu (.csv/.xlsx)</span>
                   </button>
                 </div>
                 <ul className="list-disc list-inside space-y-1 text-[#8B6A74] leading-relaxed pl-1">
-                  <li><strong>Name:</strong> Tên đầy đủ của khách mời (Bắt buộc).</li>
-                  <li><strong>Group:</strong> Nhóm: <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Family</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Bridal Party</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">VIP</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Coworkers</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">College Friends</code>.</li>
-                  <li><strong>RSVP:</strong> Trạng thái: <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Attending</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Unresponded</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Declined</code>.</li>
-                  <li><strong>Dietary:</strong> Chế độ ăn (Ví dụ: <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">None</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Vegetarian</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Vegan</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Gluten-Free</code>).</li>
-                  <li><strong>Notes:</strong> Ghi chú ngắn hoặc mối quan hệ.</li>
+                  <li><strong>Cột A (Name):</strong> Tên đầy đủ của khách mời (Bắt buộc).</li>
+                  <li><strong>Cột B (Group):</strong> Nhóm: <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Family</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Bridal Party</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">VIP</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Coworkers</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">College Friends</code>.</li>
+                  <li><strong>Cột C (RSVP):</strong> Trạng thái phản hồi: <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Attending</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Unresponded</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Declined</code>.</li>
+                  <li><strong>Cột D (Dietary):</strong> Yêu cầu món ăn (Ví dụ: <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">None</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Vegetarian</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Vegan</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Gluten-Free</code>).</li>
+                  <li><strong>Cột E (Notes):</strong> Ghi chú mối quan hệ hoặc vị trí.</li>
                 </ul>
               </div>
 
-              {/* Sample Template Preview Box */}
+              {/* Real Excel Sheet Image Preview Box */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#8B6A74] mb-1.5 flex items-center justify-between">
-                  <span>Mẫu định dạng dữ liệu (CSV Template Preview):</span>
-                  <span className="text-[11px] text-[#8B6A74] font-normal">Dùng phẩy (,) phân cách giữa các cột</span>
-                </label>
-                <div className="relative">
-                  <pre className="p-3.5 rounded-xl bg-[#3B202B] text-[#FDECEF] font-mono text-xs overflow-x-auto leading-relaxed border border-[#3B202B]">
-{SAMPLE_CSV_CONTENT}
-                  </pre>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-[#8B6A74] flex items-center gap-1.5">
+                    <FileSpreadsheet className="w-4 h-4 text-[#EFA3B3]" />
+                    <span>Ảnh Mẫu Thực Tế Microsoft Excel Sheet:</span>
+                  </label>
+                  <span className="text-[11px] text-[#8B6A74] font-medium">File Excel (.xlsx / .csv)</span>
+                </div>
+                <div className="rounded-xl overflow-hidden border-2 border-[#F8C9D2] shadow-md bg-[#FFF9F6] relative group">
+                  <img
+                    src="/excel_template_preview.jpg"
+                    alt="Real Microsoft Excel Sheet Template Preview"
+                    className="w-full h-auto object-cover max-h-60 hover:scale-[1.01] transition-transform duration-200"
+                  />
+                  <div className="absolute bottom-2.5 right-2.5 px-3 py-1 rounded-lg bg-[#3B202B]/85 backdrop-blur-sm text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-md">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#B7CBB8]" />
+                    <span>Excel Sheet Standard Template</span>
+                  </div>
                 </div>
               </div>
 
               {/* Upload Input Area */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#8B6A74] mb-1.5">
-                  Tải lên File CSV của bạn:
+                  Tải lên File Excel / CSV của bạn:
                 </label>
                 <div className="relative border-2 border-dashed border-[#F8C9D2] hover:border-[#EFA3B3] rounded-2xl p-5 bg-[#FFF9F6] text-center transition-colors">
                   <input
                     type="file"
-                    accept=".csv, .txt"
+                    accept=".csv, .txt, .xlsx, .xls"
                     onChange={handleFileChange}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                   <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
                     <Upload className="w-8 h-8 text-[#EFA3B3]" />
                     <p className="text-sm font-semibold text-[#3B202B]">
-                      {csvFile ? csvFile.name : 'Kéo thả file CSV vào đây hoặc click để chọn file'}
+                      {csvFile ? csvFile.name : 'Kéo thả file Excel / CSV vào đây hoặc click để chọn file'}
                     </p>
-                    <p className="text-xs text-[#8B6A74]">Hỗ trợ định dạng .csv hoặc .txt</p>
+                    <p className="text-xs text-[#8B6A74]">Hỗ trợ định dạng .xlsx, .csv hoặc .txt</p>
                   </div>
                 </div>
               </div>
