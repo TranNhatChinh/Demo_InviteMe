@@ -13,7 +13,14 @@ import {
   ChevronDown,
   Sparkles,
   Trash2,
-  X
+  X,
+  FileSpreadsheet,
+  Upload,
+  Download,
+  FileText,
+  HelpCircle,
+  Check,
+  AlertCircle
 } from 'lucide-react';
 
 interface GuestListTrackerProps {
@@ -24,6 +31,12 @@ interface GuestListTrackerProps {
   onDeleteGuest: (id: string) => void;
   onNavigateToSeating: (tableId?: string) => void;
 }
+
+const SAMPLE_CSV_CONTENT = `Name,Group,RSVP,Dietary,Notes
+Nguyen Van A,Family,Attending,None,Groom's cousin
+Tran Thi B,VIP,Attending,Vegetarian,Honorary guest
+Le Van C,Coworkers,Unresponded,Gluten-Free,Marketing team
+Pham Van D,Bridal Party,Attending,None,Best man`;
 
 export const GuestListTracker: React.FC<GuestListTrackerProps> = ({
   guests,
@@ -37,6 +50,12 @@ export const GuestListTracker: React.FC<GuestListTrackerProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<string>('All');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // CSV Import state
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [parsedGuests, setParsedGuests] = useState<Omit<WeddingGuest, 'id'>[]>([]);
+  const [importSuccessMsg, setImportSuccessMsg] = useState('');
 
   // New Guest Form State
   const [newName, setNewName] = useState('');
@@ -79,6 +98,96 @@ export const GuestListTracker: React.FC<GuestListTrackerProps> = ({
     });
   }, [guests, activeFilter, selectedGroup, searchQuery]);
 
+  const parseCSV = (text: string): Omit<WeddingGuest, 'id'>[] => {
+    const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+    if (lines.length <= 1) return [];
+
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const nameIdx = headers.findIndex(h => h.includes('name'));
+    const groupIdx = headers.findIndex(h => h.includes('group'));
+    const rsvpIdx = headers.findIndex(h => h.includes('rsvp'));
+    const dietaryIdx = headers.findIndex(h => h.includes('diet'));
+    const notesIdx = headers.findIndex(h => h.includes('note'));
+
+    const parsed: Omit<WeddingGuest, 'id'>[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const row = lines[i].split(',').map(cell => cell.trim().replace(/^"|"$/g, ''));
+      const name = nameIdx !== -1 && row[nameIdx] ? row[nameIdx] : `Guest ${i}`;
+      if (!name || name.toLowerCase() === 'name') continue;
+
+      const rawGroup = groupIdx !== -1 && row[groupIdx] ? row[groupIdx] : 'Family';
+      let group: GuestGroup = 'Family';
+      if (['Bridal Party', 'VIP', 'Coworkers', 'College Friends', 'Family'].includes(rawGroup)) {
+        group = rawGroup as GuestGroup;
+      }
+
+      const rawRsvp = rsvpIdx !== -1 && row[rsvpIdx] ? row[rsvpIdx] : 'Attending';
+      let rsvp: RSVPStatus = 'Attending';
+      if (['Attending', 'Unresponded', 'Declined'].includes(rawRsvp)) {
+        rsvp = rawRsvp as RSVPStatus;
+      }
+
+      const rawDietary = dietaryIdx !== -1 && row[dietaryIdx] ? row[dietaryIdx] : 'None';
+      let dietary: DietaryRestriction = 'None';
+      if (['Vegan', 'Vegetarian', 'Gluten-Free', 'Halal', 'Kosher', 'Nut Allergy', 'Dairy-Free'].includes(rawDietary)) {
+        dietary = rawDietary as DietaryRestriction;
+      }
+
+      const notes = notesIdx !== -1 && row[notesIdx] ? row[notesIdx] : undefined;
+
+      parsed.push({
+        name,
+        group,
+        rsvp,
+        dietary,
+        tableId: null,
+        seatNumber: null,
+        notes
+      });
+    }
+
+    return parsed;
+  };
+
+  const handleDownloadTemplate = () => {
+    const blob = new Blob([SAMPLE_CSV_CONTENT], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'wedding_guests_template.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCsvFile(file);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (!text) return;
+      const parsed = parseCSV(text);
+      setParsedGuests(parsed);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleConfirmImport = () => {
+    if (parsedGuests.length === 0) return;
+    parsedGuests.forEach(g => onAddGuest(g));
+
+    setImportSuccessMsg(`Successfully imported ${parsedGuests.length} guests!`);
+    setTimeout(() => setImportSuccessMsg(''), 4000);
+
+    setCsvFile(null);
+    setParsedGuests([]);
+    setIsImportModalOpen(false);
+  };
+
   const handleCreateGuest = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim()) return;
@@ -120,6 +229,19 @@ export const GuestListTracker: React.FC<GuestListTrackerProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Success Toast */}
+      {importSuccessMsg && (
+        <div className="animate-fade-in flex items-center justify-between p-4 bg-[#B7CBB8] text-[#1E3620] rounded-xl shadow-md border border-[#29422B]/20 text-sm font-semibold">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-[#1E3620]" />
+            <span>{importSuccessMsg}</span>
+          </div>
+          <button onClick={() => setImportSuccessMsg('')} className="text-[#1E3620] hover:opacity-80">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Top Banner & Title */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#F8C9D2]/40">
         <div>
@@ -135,13 +257,23 @@ export const GuestListTracker: React.FC<GuestListTrackerProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#EFA3B3] text-[#3B202B] font-medium text-sm shadow-sm hover:bg-[#F8C9D2] active:scale-[0.98] transition-all duration-200"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Guest</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setIsImportModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#F8C9D2] text-[#3B202B] font-medium text-sm shadow-xs hover:bg-[#FDECEF] hover:border-[#EFA3B3] active:scale-[0.98] transition-all duration-200"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-[#EFA3B3]" />
+            <span>Import from CSV</span>
+          </button>
+
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#EFA3B3] text-[#3B202B] font-medium text-sm shadow-sm hover:bg-[#F8C9D2] active:scale-[0.98] transition-all duration-200"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Guest</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter Tabs and Search Bar */}
@@ -519,6 +651,161 @@ export const GuestListTracker: React.FC<GuestListTrackerProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Import CSV Modal */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3B202B]/40 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-2xl bg-white rounded-2xl border border-[#F8C9D2] shadow-[0_20px_50px_rgba(59,32,43,0.18)] overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-[#FDECEF] border-b border-[#F8C9D2] flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-white border border-[#F8C9D2] text-[#EFA3B3]">
+                  <FileSpreadsheet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-[#3B202B]">Import Guests from CSV</h3>
+                  <p className="text-xs text-[#8B6A74]">Bulk import wedding guests using a CSV template</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsImportModalOpen(false);
+                  setCsvFile(null);
+                  setParsedGuests([]);
+                }}
+                className="p-1.5 text-[#8B6A74] hover:text-[#3B202B] rounded-lg hover:bg-white/60 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-5 overflow-y-auto">
+              {/* Instructions Box */}
+              <div className="p-4 rounded-xl bg-[#FFF9F6] border border-[#E8CFA8] text-xs text-[#3B202B] space-y-2">
+                <div className="flex items-center justify-between font-bold text-sm text-[#3B202B]">
+                  <span className="flex items-center gap-1.5">
+                    <HelpCircle className="w-4 h-4 text-[#E8CFA8]" />
+                    <span>Hướng dẫn định dạng File CSV:</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleDownloadTemplate}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#EFA3B3] text-[#3B202B] font-semibold text-xs hover:bg-[#F8C9D2] transition-colors shadow-xs"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Tải CSV Mẫu (.csv)</span>
+                  </button>
+                </div>
+                <ul className="list-disc list-inside space-y-1 text-[#8B6A74] leading-relaxed pl-1">
+                  <li><strong>Name:</strong> Tên đầy đủ của khách mời (Bắt buộc).</li>
+                  <li><strong>Group:</strong> Nhóm: <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Family</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Bridal Party</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">VIP</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Coworkers</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">College Friends</code>.</li>
+                  <li><strong>RSVP:</strong> Trạng thái: <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Attending</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Unresponded</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Declined</code>.</li>
+                  <li><strong>Dietary:</strong> Chế độ ăn (Ví dụ: <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">None</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Vegetarian</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Vegan</code>, <code className="bg-white px-1 py-0.5 rounded border border-[#F8C9D2] text-[#3B202B]">Gluten-Free</code>).</li>
+                  <li><strong>Notes:</strong> Ghi chú ngắn hoặc mối quan hệ.</li>
+                </ul>
+              </div>
+
+              {/* Sample Template Preview Box */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[#8B6A74] mb-1.5 flex items-center justify-between">
+                  <span>Mẫu định dạng dữ liệu (CSV Template Preview):</span>
+                  <span className="text-[11px] text-[#8B6A74] font-normal">Dùng phẩy (,) phân cách giữa các cột</span>
+                </label>
+                <div className="relative">
+                  <pre className="p-3.5 rounded-xl bg-[#3B202B] text-[#FDECEF] font-mono text-xs overflow-x-auto leading-relaxed border border-[#3B202B]">
+{SAMPLE_CSV_CONTENT}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Upload Input Area */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[#8B6A74] mb-1.5">
+                  Tải lên File CSV của bạn:
+                </label>
+                <div className="relative border-2 border-dashed border-[#F8C9D2] hover:border-[#EFA3B3] rounded-2xl p-5 bg-[#FFF9F6] text-center transition-colors">
+                  <input
+                    type="file"
+                    accept=".csv, .txt"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
+                    <Upload className="w-8 h-8 text-[#EFA3B3]" />
+                    <p className="text-sm font-semibold text-[#3B202B]">
+                      {csvFile ? csvFile.name : 'Kéo thả file CSV vào đây hoặc click để chọn file'}
+                    </p>
+                    <p className="text-xs text-[#8B6A74]">Hỗ trợ định dạng .csv hoặc .txt</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Parsed Preview Table */}
+              {parsedGuests.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-semibold text-[#3B202B]">
+                    <span className="flex items-center gap-1.5 text-[#1E3620]">
+                      <CheckCircle2 className="w-4 h-4 text-[#B7CBB8]" />
+                      <span>Đã xem trước {parsedGuests.length} khách mời hợp lệ:</span>
+                    </span>
+                  </div>
+                  <div className="max-h-40 overflow-y-auto border border-[#F8C9D2] rounded-xl bg-white">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead className="bg-[#FDECEF] sticky top-0 font-semibold text-[#8B6A74]">
+                        <tr>
+                          <th className="p-2">Tên</th>
+                          <th className="p-2">Group</th>
+                          <th className="p-2">RSVP</th>
+                          <th className="p-2">Dietary</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#F8C9D2]/30">
+                        {parsedGuests.map((g, idx) => (
+                          <tr key={idx} className="hover:bg-[#FFF9F6]">
+                            <td className="p-2 font-medium text-[#3B202B]">{g.name}</td>
+                            <td className="p-2 text-[#8B6A74]">{g.group}</td>
+                            <td className="p-2 text-[#8B6A74]">{g.rsvp}</td>
+                            <td className="p-2 text-[#8B6A74]">{g.dietary}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-[#FDECEF] border-t border-[#F8C9D2] flex items-center justify-end gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsImportModalOpen(false);
+                  setCsvFile(null);
+                  setParsedGuests([]);
+                }}
+                className="px-4 py-2 rounded-xl border border-[#F8C9D2] text-sm font-medium text-[#8B6A74] hover:bg-white"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                disabled={parsedGuests.length === 0}
+                onClick={handleConfirmImport}
+                className={`px-5 py-2 rounded-xl font-medium text-sm transition-all shadow-sm flex items-center gap-2 ${
+                  parsedGuests.length > 0
+                    ? 'bg-[#EFA3B3] text-[#3B202B] hover:bg-[#F8C9D2] cursor-pointer'
+                    : 'bg-[#F8C9D2]/40 text-[#8B6A74]/50 cursor-not-allowed'
+                }`}
+              >
+                <Upload className="w-4 h-4" />
+                <span>Import {parsedGuests.length} Khách Mời</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
